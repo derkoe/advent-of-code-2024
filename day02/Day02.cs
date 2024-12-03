@@ -38,6 +38,7 @@ class Day02
     {
         string[] lines = File.ReadAllLines("day02/input.txt");
         int safeReportCount = 0;
+        int safeReportCountWithProblemDampener = 0;
 
         foreach (var line in lines)
         {
@@ -45,10 +46,27 @@ class Day02
             if (IsSafeReport(levels))
             {
                 safeReportCount++;
+                safeReportCountWithProblemDampener++;
+            }
+            else
+            {
+                // see if levels is safe by removing one item at a time
+                for (int i = 0; i < levels.Count; i++)
+                {
+                    var newLevels = new List<int>(levels);
+                    newLevels.RemoveAt(i);
+                    if (IsSafeReport(newLevels))
+                    {
+                        safeReportCountWithProblemDampener++;
+                        break;
+                    }
+                }
             }
         }
 
         Console.WriteLine($"Part 1: {safeReportCount}");
+
+        Console.WriteLine($"Part 2: {safeReportCountWithProblemDampener}");
     }
 
 }
