@@ -12,6 +12,7 @@ class Program
             case 6: Day06.Run(); break;
             case 7: Day07.Run(); break;
             case 8: Day08.Run(); break;
+            case 9: Day09.Run(); break;
         }
     }
 }

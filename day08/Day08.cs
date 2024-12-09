@@ -22,12 +22,11 @@ public class Day08
             }
         }
 
-        Console.WriteLine(Part1(nodes));
-        Console.WriteLine(Part2(nodes));
+        Console.WriteLine(Part1(nodes, map.Count()));
+        Console.WriteLine(Part2(nodes, map.Count()));
     }
 
-
-    public static int Part1(Dictionary<char, List<(int, int)>> nodes)
+    public static int Part1(Dictionary<char, List<(int, int)>> nodes, int size)
     {
         var antinodes = new HashSet<(int, int)>();
         foreach (var node in nodes)
@@ -38,9 +37,9 @@ public class Day08
                 {
                     if (pos1 != pos2)
                     {
-                        var x = pos1.Item1 * 2 - pos2.Item1;
-                        var y = pos1.Item2 * 2 - pos2.Item2;
-                        if (x >= 0 && x < 50 && y >= 0 && y < 50)
+                        var x = pos1.Item1 + pos1.Item1 - pos2.Item1;
+                        var y = pos1.Item2 + pos1.Item2 - pos2.Item2;
+                        if (x >= 0 && x < size && y >= 0 && y < size)
                         {
                             antinodes.Add((x, y));
                         }
@@ -55,7 +54,7 @@ public class Day08
     // Part 2
     // anitnodes are all the nodes plus the 
     // an antinode occurs at any grid position exactly in line with at least two antennas of the same frequency, regardless of distance
-    public static int Part2(Dictionary<char, List<(int, int)>> nodes)
+    public static int Part2(Dictionary<char, List<(int, int)>> nodes, int size)
     {
         var antinodes = new HashSet<(int, int)>();
         foreach (var node in nodes)
@@ -68,8 +67,8 @@ public class Day08
                     if (pos1 != pos2)
                     {
                         var x = pos1.Item1 + pos1.Item1 - pos2.Item1;
-                        var y = pos1.Item1 + pos1.Item1 - pos2.Item2;
-                        while (x >= 0 && x < 50 && y >= 0 && y < 50)
+                        var y = pos1.Item2 + pos1.Item2 - pos2.Item2;
+                        while (x >= 0 && x < size && y >= 0 && y < size)
                         {
                             antinodes.Add((x, y));
                             x += pos1.Item1 - pos2.Item1;
