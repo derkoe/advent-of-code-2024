@@ -14,7 +14,7 @@ public class Day11
         }
 
         Part1(stones);
-        // Part2(stones.Select(BigInteger.Parse).ToList());
+        Part2(stones);
     }
 
     private static void Part1(List<string> stones)
@@ -23,8 +23,6 @@ public class Day11
         for (int i = 0; i < blinks; i++)
         {
             List<string> newStones = new List<string>();
-            Console.WriteLine($"Blink {i + 1}");
-            Console.WriteLine("Stones: " + string.Join(", ", stones));
 
             foreach (var stone in stones)
             {
@@ -61,46 +59,58 @@ public class Day11
         Console.WriteLine("Part 1: " + stones.Count);
     }
 
-    private static void Part2(List<BigInteger> stones)
+    private static void Part2(List<string> stones)
     {
-        int blinks = 75;
+        var stoneCounts = new Dictionary<string, long>();
+        for (int i = 0; i < stones.Count; i++)
+        {
+            if (stoneCounts.ContainsKey(stones[i]))
+            {
+                stoneCounts[stones[i]]++;
+            }
+            else
+            {
+                stoneCounts[stones[i]] = 1;
+            }
+        }
 
+        int blinks = 75;
         for (int i = 0; i < blinks; i++)
         {
-            var newStones = new List<BigInteger>();
+            var newStoneCounts = new Dictionary<string, long>();
 
-            foreach (var stone in stones)
+            foreach (var stoneEntry in stoneCounts)
             {
-                var result = new List<BigInteger>();
-
-                if (stone == 0)
+                var stone = stoneEntry.Key;
+                if (stone == "0")
                 {
-                    result.Add(1);
+                    newStoneCounts["1"] = newStoneCounts.GetValueOrDefault("1", 0) + stoneEntry.Value;
                 }
-                else if ((Math.Floor(BigInteger.Log10(stone)) + 1) % 2 == 0)
+                else if (stone.Length % 2 == 0)
                 {
-                    var stoneStr = stone.ToString();
-                    int mid = stoneStr.Length / 2;
-                    string leftHalf = stoneStr.Substring(0, mid).TrimStart('0');
-                    string rightHalf = stoneStr.Substring(mid).TrimStart('0');
+                    // Rule 2: Split the stone
+                    int mid = stone.Length / 2;
+                    string leftHalf = stone.Substring(0, mid).TrimStart('0');
+                    string rightHalf = stone.Substring(mid).TrimStart('0');
 
                     if (leftHalf == "") leftHalf = "0";
                     if (rightHalf == "") rightHalf = "0";
 
-                    result.Add(BigInteger.Parse(leftHalf));
-                    result.Add(BigInteger.Parse(rightHalf));
+                    newStoneCounts[leftHalf] = newStoneCounts.GetValueOrDefault(leftHalf, 0) + stoneEntry.Value;
+                    newStoneCounts[rightHalf] = newStoneCounts.GetValueOrDefault(rightHalf, 0) + stoneEntry.Value;
                 }
                 else
                 {
-                    result.Add(stone * 2024L);
+                    // Rule 3: Multiply by 2024
+                    var number = BigInteger.Parse(stone);
+                    number *= 2024;
+                    newStoneCounts[number.ToString()] = newStoneCounts.GetValueOrDefault(number.ToString(), 0) + stoneEntry.Value;
                 }
-
-                newStones.AddRange(result);
             }
 
-            stones = newStones;
+            stoneCounts = newStoneCounts;
         }
 
-        Console.WriteLine("Part 2: " + stones.Count);
+        Console.WriteLine("Part 2: " + stoneCounts.Aggregate(0L, (acc, entry) => acc + entry.Value));
     }
 }
