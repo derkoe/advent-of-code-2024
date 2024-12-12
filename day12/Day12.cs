@@ -1,5 +1,10 @@
+using System.Reflection.Metadata;
+
 public class Day12
 {
+    private static readonly int[] DR = { -1, 1, 0, 0 };
+    private static readonly int[] DC = { 0, 0, -1, 1 };
+
     public static void Run()
     {
         string[] lines = File.ReadAllLines("day12/input.txt");
@@ -17,12 +22,11 @@ public class Day12
 
         int[,] visited = new int[rows, cols];
         int regionId = 0;
-        Dictionary<int, char> regionType = new Dictionary<int, char>();
-        Dictionary<int, int> area = new Dictionary<int, int>();
-        Dictionary<int, int> perimeter = new Dictionary<int, int>();
+        var regionType = new Dictionary<int, char>();
+        var area = new Dictionary<int, int>();
+        var perimeter = new Dictionary<int, int>();
+        var sides = new Dictionary<int, int>();
 
-        int[] dr = { -1, 1, 0, 0 };
-        int[] dc = { 0, 0, -1, 1 };
 
         for (int r = 0; r < rows; r++)
         {
@@ -35,26 +39,30 @@ public class Day12
                     regionType[regionId] = type;
                     area[regionId] = 0;
                     perimeter[regionId] = 0;
-                    DFS(map, visited, r, c, type, regionId, area, perimeter, dr, dc);
+                    sides[regionId] = 0;
+                    DFS(map, visited, r, c, type, regionId, area, perimeter, sides);
                 }
             }
         }
 
         var price = 0;
+        var priceWithSides = 0;
 
         foreach (var id in area.Keys)
         {
-            Console.WriteLine($"Region {regionType[id]}: Area = {area[id]}, Perimeter = {perimeter[id]}");
+            Console.WriteLine($"Region {regionType[id]}: Area = {area[id]}, Perimeter = {perimeter[id]}, Sides = {sides[id]}");
             price += area[id] * perimeter[id];
+            priceWithSides += area[id] * sides[id];
         }
 
         Console.WriteLine($"Part 1: {price}");
+        Console.WriteLine($"Part 2: {priceWithSides}");
     }
 
     static void DFS(char[,] map, int[,] visited, int r, int c, char type, int regionId,
-        Dictionary<int, int> area, Dictionary<int, int> perimeter, int[] dr, int[] dc)
+        Dictionary<int, int> area, Dictionary<int, int> perimeter, Dictionary<int, int> sides)
     {
-        Stack<(int, int)> stack = new Stack<(int, int)>();
+        var stack = new Stack<(int, int)>();
         stack.Push((r, c));
 
         int rows = map.GetLength(0);
@@ -70,11 +78,10 @@ public class Day12
             area[regionId]++;
 
             int cellPerimeter = 4;
-
             for (int i = 0; i < 4; i++)
             {
-                int nr = row + dr[i];
-                int nc = col + dc[i];
+                int nr = row + DR[i];
+                int nc = col + DC[i];
 
                 if (nr >= 0 && nr < rows && nc >= 0 && nc < cols)
                 {
@@ -87,6 +94,52 @@ public class Day12
                 }
             }
             perimeter[regionId] += cellPerimeter;
+
+            // calculate corners of the region - corners can be outside corders or inside corners
+            int corners = 0;
+            // case 1 - top left corner of the region, entries to the top and left are not the same type
+            if (row == 0 && col == 0 || (row == 0 && col > 0 && map[row, col - 1] != type) || (col == 0 && row > 0 && map[row - 1, col] != type) || (row > 0 && col > 0 && map[row, col - 1] != type && map[row - 1, col] != type))
+            {
+                corners++;
+            }
+            // case 2 - top right corner of the region, entries to the top and right are not the same type
+            if (row == 0 && col == cols - 1 || (row == 0 && col < cols - 1 && map[row, col + 1] != type) || (col == cols - 1 && row > 0 && map[row - 1, col] != type) || (row > 0 && col < cols - 1 && map[row, col + 1] != type && map[row - 1, col] != type))
+            {
+                corners++;
+            }
+            // case 3 - bottom left corner of the region, entries to the bottom and left are not the same type
+            if (row == rows - 1 && col == 0 || (row == rows - 1 && col > 0 && map[row, col - 1] != type) || (col == 0 && row < rows - 1 && map[row + 1, col] != type) || (row < rows - 1 && col > 0 && map[row, col - 1] != type && map[row + 1, col] != type))
+            {
+                corners++;
+            }
+            // case 4 - bottom right corner of the region, entries to the bottom and right are not the same type
+            if (row == rows - 1 && col == cols - 1 || (row == rows - 1 && col < cols - 1 && map[row, col + 1] != type) || (col == cols - 1 && row < rows - 1 && map[row + 1, col] != type) || (row < rows - 1 && col < cols - 1 && map[row, col + 1] != type && map[row + 1, col] != type))
+            {
+                corners++;
+            }
+            // case 5 - inside corner top right - cell to the top and the right are the same type but the cell top right is not
+            if (row > 0 && col < cols - 1 && map[row, col + 1] == type && map[row - 1, col] == type && map[row - 1, col + 1] != type)
+            {
+                corners++;
+            }
+            // case 6 - inside corner top left - cell to the top and the left are the same type but the cell top left is not
+            if (row > 0 && col > 0 && map[row, col - 1] == type && map[row - 1, col] == type && map[row - 1, col - 1] != type)
+            {
+                corners++;
+            }
+            // case 7 - inside corner bottom right - cell to the bottom and the right are the same type but the cell bottom right is not
+            if (row < rows - 1 && col < cols - 1 && map[row, col + 1] == type && map[row + 1, col] == type && map[row + 1, col + 1] != type)
+            {
+                corners++;
+            }
+            // case 8 - inside corner bottom left - cell to the bottom and the left are the same type but the cell bottom left is not
+            if (row < rows - 1 && col > 0 && map[row, col - 1] == type && map[row + 1, col] == type && map[row + 1, col - 1] != type)
+            {
+                corners++;
+            }
+
+            sides[regionId] += corners;
         }
     }
+
 }
