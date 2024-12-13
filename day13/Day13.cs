@@ -1,7 +1,3 @@
-using System;
-using System.IO;
-using System.Collections.Generic;
-
 public class Day13
 {
     public static void Run()
@@ -13,58 +9,73 @@ public class Day13
             var machine = new Machine();
 
             var buttonA = lines[i].Split(new[] { "Button A: ", "X+", ", Y+", "" }, StringSplitOptions.RemoveEmptyEntries);
-            machine.Ax = int.Parse(buttonA[0]);
-            machine.Ay = int.Parse(buttonA[1]);
+            machine.Ax = long.Parse(buttonA[0]);
+            machine.Ay = long.Parse(buttonA[1]);
 
             var buttonB = lines[i + 1].Split(new[] { "Button B: ", "X+", ", Y+", "" }, StringSplitOptions.RemoveEmptyEntries);
-            machine.Bx = int.Parse(buttonB[0]);
-            machine.By = int.Parse(buttonB[1]);
+            machine.Bx = long.Parse(buttonB[0]);
+            machine.By = long.Parse(buttonB[1]);
 
             var prize = lines[i + 2].Split(new[] { "Prize: ", "X=", ", Y=", "" }, StringSplitOptions.RemoveEmptyEntries);
-            machine.Px = int.Parse(prize[0]);
-            machine.Py = int.Parse(prize[1]);
+            machine.Px = long.Parse(prize[0]);
+            machine.Py = long.Parse(prize[1]);
 
             machines.Add(machine);
         }
 
+        // Part 1
+        SolveMachines(machines);
+
+        // Part 2
+        foreach (var machine in machines)
+        {
+            machine.Px += 10000000000000L;
+            machine.Py += 10000000000000L;
+        }
+        SolveMachines(machines);
+    }
+
+    static void SolveMachines(List<Machine> machines)
+    {
         int totalPrizes = 0;
-        int totalTokens = 0;
+        long totalTokens = 0;
 
         foreach (var machine in machines)
         {
-            int minTokens = int.MaxValue;
-            bool canWin = false;
-            for (int nA = 0; nA <= 100; nA++)
-            {
-                for (int nB = 0; nB <= 100; nB++)
-                {
-                    int x = nA * machine.Ax + nB * machine.Bx;
-                    int y = nA * machine.Ay + nB * machine.By;
-
-                    if (x == machine.Px && y == machine.Py)
-                    {
-                        int tokens = nA * 3 + nB * 1;
-                        if (tokens < minTokens)
-                        {
-                            minTokens = tokens;
-                            canWin = true;
-                        }
-                    }
-                }
-            }
-            if (canWin)
+            var result = Solve(machine.Ax, machine.Bx, machine.Px, machine.Ay, machine.By, machine.Py);
+            if (result != null)
             {
                 totalPrizes++;
-                totalTokens += minTokens;
+                totalTokens += result.Item3;
             }
         }
 
         Console.WriteLine($"Prizes won: {totalPrizes}");
         Console.WriteLine($"Minimum tokens required: {totalTokens}");
     }
+
+    static Tuple<long, long, long> Solve(long a1, long b1, long c1, long a2, long b2, long c2)
+    {
+        long det = a1 * b2 - a2 * b1;
+        if (det == 0) return null;
+
+        long xNum = c1 * b2 - c2 * b1;
+        long yNum = a1 * c2 - a2 * c1;
+
+        if (xNum % det != 0 || yNum % det != 0) return null;
+
+        long nA = xNum / det;
+        long nB = yNum / det;
+
+        if (nA < 0 || nB < 0) return null;
+
+        long tokens = nA * 3 + nB * 1;
+
+        return Tuple.Create(nA, nB, tokens);
+    }
 }
 
 public class Machine
 {
-    public int Ax, Ay, Bx, By, Px, Py;
+    public long Ax, Ay, Bx, By, Px, Py;
 }
