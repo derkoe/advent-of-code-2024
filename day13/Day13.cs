@@ -54,7 +54,7 @@ public class Day13
         Console.WriteLine($"Minimum tokens required: {totalTokens}");
     }
 
-    static Tuple<long, long, long> Solve(long a1, long b1, long c1, long a2, long b2, long c2)
+    static Tuple<long, long, long>? Solve(long a1, long b1, long c1, long a2, long b2, long c2)
     {
         long det = a1 * b2 - a2 * b1;
         if (det == 0) return null;
