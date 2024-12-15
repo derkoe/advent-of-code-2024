@@ -2,6 +2,7 @@ public class Day15
 {
     public static void Run()
     {
+        Console.Clear();
         Part1();
         Part2();
     }
@@ -159,30 +160,31 @@ public class Day15
     {
         for (int y = 0; y < rows; y++)
         {
+            var line = "";
             for (int x = 0; x < cols; x++)
             {
                 if (map.robot == (y, x))
                 {
-                    Console.Write('@');
+                    line += '@';
                 }
                 else if (map.boxes.Contains((y, x)))
                 {
-                    Console.Write(wide ? '[' : 'O');
+                    line += wide ? '[' : 'O';
                 }
                 else if (wide && map.boxes.Contains((y, x - 1)))
                 {
-                    Console.Write("]");
+                    line += "]";
                 }
                 else if (map.walls.Contains((y, x)))
                 {
-                    Console.Write('#');
+                    line += '#';
                 }
                 else
                 {
-                    Console.Write('.');
+                    line += '.';
                 }
             }
-            Console.WriteLine();
+            Console.WriteLine(line);
         }
     }
 
@@ -190,7 +192,6 @@ public class Day15
     {
         // in part 2 all walls are double as wide (with the same height)
         // all boxes are double as wide (with the same height) - when a box is moved up/down half-overlapping boxes are also moved
-
         var file = File.ReadAllText("day15/input.txt");
         var parts = file.Split("\n\n");
         var mapStr = parts[0].Split("\n");
@@ -217,10 +218,15 @@ public class Day15
             }
         }
 
-        var moveCount = 1;
+        // var moveCount = 0;
         var moves = parts[1].Replace("\n", "");
         foreach (var move in moves)
         {
+            // Console.SetCursorPosition(0, 1);
+            // Console.WriteLine($"Move {moveCount}: {move} {map.robot}");
+            // PrintMap(map, rows, columns * 2, true);
+            // Console.ReadLine();
+
             switch (move)
             {
                 case '>':
@@ -292,6 +298,7 @@ public class Day15
                                 if (map.walls.Contains((box.x - 1, box.y)) || map.walls.Contains((box.x - 1, box.y + 1)))
                                 {
                                     boxesToMove.Clear();
+                                    nextLine.Clear();
                                     break;
                                 }
 
@@ -352,6 +359,7 @@ public class Day15
                                 if (map.walls.Contains((box.x + 1, box.y)) || map.walls.Contains((box.x + 1, box.y + 1)))
                                 {
                                     boxesToMove.Clear();
+                                    nextLine.Clear();
                                     break;
                                 }
 
@@ -384,11 +392,6 @@ public class Day15
                     }
                     break;
             }
-            // Console.WriteLine($"Move {moveCount++}: {move}           ");
-            // PrintMap(map, rows, columns * 2, true);
-            // Console.ReadLine();
-            // Console.SetCursorPosition(0, 0);
-            // PrintMap(map, rows, columns * 2, true);
         }
         Console.WriteLine($"Part 2: {CalcGPSPositionSum(map)}");
     }
