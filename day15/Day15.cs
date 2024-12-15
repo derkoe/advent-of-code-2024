@@ -3,6 +3,7 @@ public class Day15
     public static void Run()
     {
         Part1();
+        Part2();
     }
 
     struct Map
@@ -27,8 +28,13 @@ public class Day15
         return sum;
     }
 
-    public static void Part1()
+    public static void Part1(bool printMap = false)
     {
+        if (printMap)
+        {
+            Console.Clear();
+        }
+
         // parse map from input "day15/input.txt"
         var file = File.ReadAllText("day15/input.txt");
         var parts = file.Split("\n\n");
@@ -55,7 +61,6 @@ public class Day15
             }
         }
 
-        Console.Clear();
         var moves = parts[1].Replace("\n", "");
         foreach (var move in moves)
         {
@@ -138,33 +143,253 @@ public class Day15
                     }
                     break;
             }
-            // print map
-            Console.SetCursorPosition(0, 0);
-            Console.WriteLine($"Move: {move}");
-            for (int i = 0; i < mapStr.Length; i++)
+            if (printMap)
             {
-                for (int j = 0; j < mapStr[i].Length; j++)
-                {
-                    if (map.robot == (i, j))
-                    {
-                        Console.Write("@");
-                    }
-                    else if (map.boxes.Contains((i, j)))
-                    {
-                        Console.Write('O');
-                    }
-                    else if (map.walls.Contains((i, j)))
-                    {
-                        Console.Write('#');
-                    }
-                    else
-                    {
-                        Console.Write(" ");
-                    }
-                }
-                Console.WriteLine();
+                // print map
+                Console.SetCursorPosition(0, 0);
+                Console.WriteLine($"Move: {move}");
+                PrintMap(map, rows, columns);
+                Thread.Sleep(100);
             }
         }
         Console.WriteLine($"Part 1: {CalcGPSPositionSum(map)}");
+    }
+
+    static void PrintMap(Map map, int rows, int cols, bool wide = false)
+    {
+        for (int y = 0; y < rows; y++)
+        {
+            for (int x = 0; x < cols; x++)
+            {
+                if (map.robot == (y, x))
+                {
+                    Console.Write('@');
+                }
+                else if (map.boxes.Contains((y, x)))
+                {
+                    Console.Write(wide ? '[' : 'O');
+                }
+                else if (wide && map.boxes.Contains((y, x - 1)))
+                {
+                    Console.Write("]");
+                }
+                else if (map.walls.Contains((y, x)))
+                {
+                    Console.Write('#');
+                }
+                else
+                {
+                    Console.Write('.');
+                }
+            }
+            Console.WriteLine();
+        }
+    }
+
+    public static void Part2()
+    {
+        // in part 2 all walls are double as wide (with the same height)
+        // all boxes are double as wide (with the same height) - when a box is moved up/down half-overlapping boxes are also moved
+
+        var file = File.ReadAllText("day15/input.txt");
+        var parts = file.Split("\n\n");
+        var mapStr = parts[0].Split("\n");
+        var rows = mapStr.Length;
+        var columns = mapStr[0].Length;
+        var map = new Map();
+        for (int y = 0; y < rows; y++)
+        {
+            for (int x = 0; x < columns; x++)
+            {
+                if (mapStr[y][x] == '#')
+                {
+                    map.walls.Add((y, x * 2));
+                    map.walls.Add((y, x * 2 + 1));
+                }
+                else if (mapStr[y][x] == '@')
+                {
+                    map.robot = (y, x * 2);
+                }
+                else if (mapStr[y][x] == 'O')
+                {
+                    map.boxes.Add((y, x * 2));
+                }
+            }
+        }
+
+        var moveCount = 1;
+        var moves = parts[1].Replace("\n", "");
+        foreach (var move in moves)
+        {
+            switch (move)
+            {
+                case '>':
+                    if (!map.walls.Contains((map.robot.x, map.robot.y + 1)))
+                    {
+                        int nextY = map.robot.y + 1;
+                        while (map.boxes.Contains((map.robot.x, nextY)))
+                        {
+                            // boxes are now 2 wide
+                            nextY += 2;
+                        }
+                        if (!map.walls.Contains((map.robot.x, nextY)))
+                        {
+                            for (int y = nextY - 2; y > map.robot.y; y = y - 2)
+                            {
+                                map.boxes.Remove((map.robot.x, y));
+                                map.boxes.Add((map.robot.x, y + 1));
+                            }
+                            map.robot = (map.robot.x, map.robot.y + 1);
+                        }
+                    }
+                    break;
+                case '<':
+                    if (!map.walls.Contains((map.robot.x, map.robot.y - 1)))
+                    {
+                        int nextY = map.robot.y - 2;
+                        while (map.boxes.Contains((map.robot.x, nextY)))
+                        {
+                            // boxes are now 2 wide
+                            nextY -= 2;
+                        }
+                        if (!map.walls.Contains((map.robot.x, nextY + 1)))
+                        {
+                            for (int y = nextY + 2; y < map.robot.y; y = y + 2)
+                            {
+                                map.boxes.Remove((map.robot.x, y));
+                                map.boxes.Add((map.robot.x, y - 1));
+                            }
+                            map.robot = (map.robot.x, map.robot.y - 1);
+                        }
+                    }
+                    break;
+                case '^':
+                    if (!map.walls.Contains((map.robot.x - 1, map.robot.y)))
+                    {
+                        var boxesToMove = new List<(int x, int y)>();
+                        var nextLine = new List<(int x, int y)>();
+                        if (map.boxes.Contains((map.robot.x - 1, map.robot.y)))
+                        {
+                            nextLine.Add((map.robot.x - 1, map.robot.y));
+                        }
+                        if (map.boxes.Contains((map.robot.x - 1, map.robot.y - 1)))
+                        {
+                            nextLine.Add((map.robot.x - 1, map.robot.y - 1));
+                        }
+                        boxesToMove.AddRange(nextLine);
+                        if (nextLine.Count == 0)
+                        {
+                            map.robot = (map.robot.x - 1, map.robot.y);
+                            break;
+                        }
+
+                        while (nextLine.Count > 0)
+                        {
+                            var currentLine = new List<(int x, int y)>(nextLine);
+                            nextLine.Clear();
+                            foreach (var box in currentLine)
+                            {
+                                if (map.walls.Contains((box.x - 1, box.y)) || map.walls.Contains((box.x - 1, box.y + 1)))
+                                {
+                                    boxesToMove.Clear();
+                                    break;
+                                }
+
+                                if (map.boxes.Contains((box.x - 1, box.y + 1)))
+                                {
+                                    nextLine.Add((box.x - 1, box.y + 1));
+                                }
+                                if (map.boxes.Contains((box.x - 1, box.y)))
+                                {
+                                    nextLine.Add((box.x - 1, box.y));
+                                }
+                                if (map.boxes.Contains((box.x - 1, box.y - 1)))
+                                {
+                                    nextLine.Add((box.x - 1, box.y - 1));
+                                }
+                            }
+                            boxesToMove.AddRange(nextLine);
+                        }
+
+                        if (boxesToMove.Count > 0)
+                        {
+                            boxesToMove.Sort((a, b) => a.x.CompareTo(b.x));
+                            for (int i = 0; i < boxesToMove.Count; i++)
+                            {
+                                map.boxes.Remove(boxesToMove[i]);
+                                map.boxes.Add((boxesToMove[i].x - 1, boxesToMove[i].y));
+                            }
+                            map.robot = (map.robot.x - 1, map.robot.y);
+                        }
+                    }
+                    break;
+                case 'v':
+                    if (!map.walls.Contains((map.robot.x + 1, map.robot.y)))
+                    {
+                        var boxesToMove = new List<(int x, int y)>();
+                        var nextLine = new List<(int x, int y)>();
+                        if (map.boxes.Contains((map.robot.x + 1, map.robot.y)))
+                        {
+                            nextLine.Add((map.robot.x + 1, map.robot.y));
+                        }
+                        if (map.boxes.Contains((map.robot.x + 1, map.robot.y - 1)))
+                        {
+                            nextLine.Add((map.robot.x + 1, map.robot.y - 1));
+                        }
+                        boxesToMove.AddRange(nextLine);
+                        if (nextLine.Count == 0)
+                        {
+                            map.robot = (map.robot.x + 1, map.robot.y);
+                            break;
+                        }
+
+                        while (nextLine.Count > 0)
+                        {
+                            var currentLine = new List<(int x, int y)>(nextLine);
+                            nextLine.Clear();
+                            foreach (var box in currentLine)
+                            {
+                                if (map.walls.Contains((box.x + 1, box.y)) || map.walls.Contains((box.x + 1, box.y + 1)))
+                                {
+                                    boxesToMove.Clear();
+                                    break;
+                                }
+
+                                if (map.boxes.Contains((box.x + 1, box.y + 1)))
+                                {
+                                    nextLine.Add((box.x + 1, box.y + 1));
+                                }
+                                if (map.boxes.Contains((box.x + 1, box.y)))
+                                {
+                                    nextLine.Add((box.x + 1, box.y));
+                                }
+                                if (map.boxes.Contains((box.x + 1, box.y - 1)))
+                                {
+                                    nextLine.Add((box.x + 1, box.y - 1));
+                                }
+                            }
+                            boxesToMove.AddRange(nextLine);
+                        }
+
+                        if (boxesToMove.Count > 0)
+                        {
+                            boxesToMove.Sort((a, b) => b.x.CompareTo(a.x));
+                            for (int i = 0; i < boxesToMove.Count; i++)
+                            {
+                                map.boxes.Remove(boxesToMove[i]);
+                                map.boxes.Add((boxesToMove[i].x + 1, boxesToMove[i].y));
+                            }
+                            map.robot = (map.robot.x + 1, map.robot.y);
+                        }
+                    }
+                    break;
+            }
+            // Console.WriteLine($"Move {moveCount++}: {move}           ");
+            // PrintMap(map, rows, columns * 2, true);
+            // Console.ReadLine();
+            // Console.SetCursorPosition(0, 0);
+            // PrintMap(map, rows, columns * 2, true);
+        }
+        Console.WriteLine($"Part 2: {CalcGPSPositionSum(map)}");
     }
 }
