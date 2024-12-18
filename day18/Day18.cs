@@ -7,11 +7,25 @@ public class Day18
 {
     public static void Run()
     {
+        var lines = File.ReadAllLines("day18/input.txt");
+        int steps = FindPath(lines, 1024);
+        Console.WriteLine($"Part 1: {steps}");
+
+        for (int i = 1024; i < lines.Length; i++)
+        {
+            steps = FindPath(lines, i);
+            if (steps == -1)
+            {
+                Console.WriteLine($"Part 2: {lines[i - 1]}");
+                break;
+            }
+        }
+    }
+
+    private static int FindPath(string[] lines, int numBytes)
+    {
         int gridSize = 71;
         bool[,] grid = new bool[gridSize, gridSize];
-
-        var lines = File.ReadAllLines("day18/input.txt");
-        int numBytes = 1024;
 
         for (int i = 0; i < numBytes && i < lines.Length; i++)
         {
@@ -22,7 +36,7 @@ public class Day18
         }
 
         int steps = FindShortestPath(grid);
-        Console.WriteLine($"Minimum number of steps needed to reach the exit: {steps}");
+        return steps;
     }
 
     static int FindShortestPath(bool[,] grid)
@@ -40,7 +54,9 @@ public class Day18
             var (x, y, steps) = queue.Dequeue();
 
             if (x == gridSize - 1 && y == gridSize - 1)
+            {
                 return steps;
+            }
 
             foreach (var (dx, dy) in directions)
             {
