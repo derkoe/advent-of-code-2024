@@ -25,6 +25,10 @@ class Program
             case 19: Day19.Run(); break;
             case 20: Day20.Run(); break;
             case 21: Day21.Run(); break;
+            case 22: Day22.Run(); break;
+            case 23: Day23.Run(); break;
+            case 24: Day24.Run(); break;
+            case 25: Day25.Run(); break;
         }
     }
 }
