@@ -387,7 +387,14 @@ public class Day21
     {
         var codes = File.ReadAllLines("day21/input.txt");
 
-        var part1 = 0;
+        Part1(codes);
+
+        Part2(codes);
+    }
+
+    private static void Part1(string[] codes)
+    {
+        var sum = 0;
         foreach (var code in codes)
         {
             HashSet<string> keypadMoves = GetKeypadMoves(code);
@@ -409,9 +416,14 @@ public class Day21
             int sequenceLength = shortestMove.Length;
             int numericPartOfCode = int.Parse(code.Substring(0, code.Length - 1));
 
-            part1 += sequenceLength * numericPartOfCode;
+            sum += sequenceLength * numericPartOfCode;
         }
-        Console.WriteLine($"Part 1: {part1}");
+        Console.WriteLine($"Part 1: {sum}");
+    }
+
+    private static void Part2(string[] codes)
+    {
+        // TODO
     }
 
     private static HashSet<string> GetKeypadMoves(string input)
@@ -456,9 +468,5 @@ public class Day21
         }
 
         return directionalMoves;
-    }
-
-    public static void Part1(string[] codes)
-    {
     }
 }
